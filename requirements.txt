@@ -2,3 +2,4 @@ scikit-learn
 seaborn
 matplotlib
 requests
+category_encoders
