@@ -3,8 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import requests
 import io
-from transformers import pipeline
-from PIL import Image
 import requests
 import myFunctions as my
 import seaborn as sns
