@@ -17,7 +17,7 @@ best_params = {'max_features': 1.0, 'max_samples': .5, 'n_estimators': 100}
 model.set_params(**best_params)
 
 
-my.page_header(general_name,model)
+my.page_header(general_name,model,test_size=.3)
 
 st.write('the parameters for the above model were optimized using GridSearchCV. The code for that process can be seen below.  Ultimately the best parameters were: max_features= 1.0, max_samples=1.0, n_estimators=0')
 

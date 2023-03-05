@@ -23,7 +23,7 @@ from sklearn.tree import DecisionTreeClassifier
 def test_fuction():
     st.write('this is only a test')
 
-def page_header(general_name, model):
+def page_header(general_name, model,**kwargs):
     model_name = type(model).__name__
     st.title(general_name)
     st.header(f'model: {model_name}')
@@ -32,14 +32,16 @@ def page_header(general_name, model):
     # Create the button
     if st.button('Click me to run the model',key='RunCode_button'):
         #dataset = myData()
-        df,X,y = data_cleanup()
-        split_scale_fit(model=model,X=X,y=y,test_size=.3)
-        graph_ROC_AUC(model=model,X=X,y=y,test_size=.3)
+        df = data_cleanup(**kwargs)
+        st.write('This is how the model was set-up:')
+        st.code(model)
+        split_scale_fit(model=model,df=df,**kwargs)
+        graph_ROC_AUC(model=model,df=df,**kwargs)
 
-        st.header('Balance the dataset')
-        df,X,y = data_cleanup(Fraud=5_000,Non_Fraud=90_000)
-        split_scale_fit(model=model,X=X,y=y,test_size=.3)
-        graph_ROC_AUC(model=model,X=X,y=y,test_size=.3)
+        #st.header('Balance the dataset')
+        #df,X,y = data_cleanup(Fraud=5_000,Non_Fraud=90_000)
+        #split_scale_fit(model=model,X=X,y=y,test_size=.3)
+        #graph_ROC_AUC(model=model,X=X,y=y,test_size=.3)
 
 def myData():
     dataset1 = pd.read_csv('./data/fraudTest.csv')
@@ -76,7 +78,7 @@ def o_encode(cat,df):
     return df
 
 
-def data_cleanup(balanced=False,**kwargs):
+def data_cleanup(**kwargs):
     df = myData()
     #look for numerical columns and only keep those:
     
@@ -108,7 +110,7 @@ def data_cleanup(balanced=False,**kwargs):
         df = balanced_dataframe(df,kwargs['Fraud'],kwargs['Non_Fraud'])
     X,y = get_X_y(df)
     
-    return df,X,y
+    return df
 
 
 
@@ -121,6 +123,8 @@ def balanced_dataframe(df,Fraud,Non_Fraud):
     non_fraud = non_fraud[:Non_Fraud]
     new_df = pd.concat([non_fraud,fraud.sample(Fraud)])
     balanced_df = new_df.sample(frac=1)
+    st.write('This model is run from a balanced dataset')
+    st.write(f'This dataset is balanced to: [Fraud:{Fraud}, Non_Fraud:{Non_Fraud}')
     return  balanced_df
 
 def get_X_y(df):
@@ -186,8 +190,32 @@ def show_metrics(model, test, pred):
 #         lst.append(a)
 #     return tuple(lst)
     
-def split_scale_fit(model,X,y,test_size):
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_size, random_state = 0)
+def split_scale_fit(model,df,**kwargs):
+    if 'fraud_test_size' in kwargs:
+        fraud_test_size=kwargs['fraud_test_size']
+        non_fraud_test_size=kwargs['non_fraud_test_size']
+
+        non_fraud = df[df['is_fraud']==0]
+        fraud = df[df['is_fraud']==1]
+
+        X,y = get_X_y(fraud)
+        X_train_fraud, X_test_fraud, y_train_fraud, y_test_fraud = train_test_split(X, y, test_size = fraud_test_size, random_state = 0)
+
+        X,y = get_X_y(non_fraud)
+        X_train_non_fraud, X_test_non_fraud, y_train_non_fraud, y_test_non_fraud = train_test_split(X, y, test_size = non_fraud_test_size, random_state = 0)
+
+        print(f'Training set balance= [Fraud:{len(X_train_fraud)}, Non_Fraud:{len(X_train_non_fraud)}]')
+        print(f'Testing set balance= [Fraud:{len(X_test_fraud)}, Non_Fraud:{len(X_test_non_fraud)}]')
+
+        X_train= pd.concat([X_train_fraud,X_train_non_fraud])
+        X_test= pd.concat([X_test_fraud,X_test_non_fraud])
+        y_train= pd.concat([y_train_fraud,y_train_non_fraud])
+        y_test= pd.concat([y_test_fraud,y_test_non_fraud])   
+    else:
+        X,y = get_X_y(df)
+        test_size=kwargs['test_size']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_size)
+
     
     #scale X datasets:
     
@@ -210,9 +238,33 @@ def split_scale_fit(model,X,y,test_size):
     #y_pred_entiredataset = model.predict(X)
     #show_metrics(model,y, y_pred_entiredataset)
     
-def graph_ROC_AUC(model,X,y,test_size):
+def graph_ROC_AUC(model,df,**kwargs):
+    if 'fraud_test_size' in kwargs:
+        fraud_test_size=kwargs['fraud_test_size']
+        non_fraud_test_size=kwargs['non_fraud_test_size']
+
+        non_fraud = df[df['is_fraud']==0]
+        fraud = df[df['is_fraud']==1]
+
+        X,y = get_X_y(fraud)
+        X_train_fraud, X_test_fraud, y_train_fraud, y_test_fraud = train_test_split(X, y, test_size = fraud_test_size, random_state = 0)
+
+        X,y = get_X_y(non_fraud)
+        X_train_non_fraud, X_test_non_fraud, y_train_non_fraud, y_test_non_fraud = train_test_split(X, y, test_size = non_fraud_test_size, random_state = 0)
+
+        print(f'Training set balance= [Fraud:{len(X_train_fraud)}, Non_Fraud:{len(X_train_non_fraud)}]')
+        print(f'Testing set balance= [Fraud:{len(X_test_fraud)}, Non_Fraud:{len(X_test_non_fraud)}]')
+
+        X_train= pd.concat([X_train_fraud,X_train_non_fraud])
+        X_test= pd.concat([X_test_fraud,X_test_non_fraud])
+        y_train= pd.concat([y_train_fraud,y_train_non_fraud])
+        y_test= pd.concat([y_test_fraud,y_test_non_fraud])   
+    else:
+        X,y = get_X_y(df)
+        test_size=kwargs['test_size']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_size)
+
     
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_size, random_state = 0)
     #scale X datasets:
     model_name = type(model).__name__
     fn = Path(f'output/{model_name}_ROC')
