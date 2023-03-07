@@ -52,7 +52,7 @@ def myData():
     return dataset
 
 def metrics_to_csv(model_name,score_list):
-    file_name = Path('data/Metrics.csv')
+    file_name = Path('./data/Metrics.csv')
     df_Metrics=pd.read_csv(file_name, index_col=0)
     df_Metrics[model_name] = score_list
     df_Metrics.to_csv(file_name)
