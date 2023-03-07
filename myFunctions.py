@@ -43,6 +43,7 @@ def page_header(general_name, model,**kwargs):
         #split_scale_fit(model=model,X=X,y=y,test_size=.3)
         #graph_ROC_AUC(model=model,X=X,y=y,test_size=.3)
 
+@st.cache_data
 def myData():
     dataset1 = pd.read_csv('./data/fraudTest.csv')
     dataset2 = pd.read_csv('./data/fraudTrain.csv')
